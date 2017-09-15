@@ -217,16 +217,23 @@ void Application::clear() {
 #endif
 }
 
-void Application::sortContacts() {
+void Application::getSortedReferences(ContactReference * references, Bool descending) {
     UInt n = contactCount;
     UInt t;
+
+    Bool c;
+
+    for (UInt i = 0; i < contactCount; i++)
+        references[i] = &contactList[i];
 
     do {
         t = 0;
 
         for (UInt i = 1; i < n; i++) {
-            if (contactList[i - 1].compare(contactList[i]) > 0) {
-                std::swap(contactList[i - 1], contactList[i]);
+            c = (*references[i - 1]).compare(*references[i]) < 0;
+
+            if (c && descending || !c && !descending) {
+                std::swap(references[i - 1], references[i]);
                 t = i;
             }
         }
@@ -286,7 +293,6 @@ void Application::addAction() {
         switch (option) {
         case 1:
             contactList[contactCount++] = contact;
-            sortContacts();
             execute();
 
             break;
@@ -433,7 +439,6 @@ void Application::editAction() {
                 switch (option) {
                 case 1:
                     *results[index] = contact;
-                    sortContacts();
                     execute();
 
                     break;
@@ -647,10 +652,37 @@ void Application::searchAction() {
 void Application::listAction() {
     createTitle(Translator::LIST_MESSAGE);
 
-    for (UInt i = 0; i < contactCount; i++)
-        std::cout << i + 1 << ". " << contactList[i] << std::endl << std::endl;
-
     std::vector<const Character *> menu;
+    menu.push_back(Translator::ASCENDING);
+    menu.push_back(Translator::DESCENDING);
+    menu.push_back(Translator::INSERTION);
+
+    createMenu(menu);
+    separator();
+
+    requestOption();
+    separator();
+
+    if (option == 1 || option == 2) {
+        ContactReference * references = new ContactReference[contactCount];
+        getSortedReferences(references, option - 1);
+
+        for (UInt i = 0; i < contactCount; i++)
+            std::cout << i + 1 << ". " << *references[i] << std::endl << std::endl;
+
+        delete[] references;
+    }
+    else if (option == 3) {
+        for (UInt i = 0; i < contactCount; i++)
+            std::cout << i + 1 << ". " << contactList[i] << std::endl << std::endl;
+    }
+    else {
+        listAction();
+
+        return;
+    }
+
+    menu.clear();
     menu.push_back(Translator::OK);
     menu.push_back(Translator::EXIT);
 
@@ -680,7 +712,29 @@ void Application::exportAction() {
     requestText(filename);
     separator();
 
+    print(Translator::SORT_MESSAGE);
+    separator();
+
     std::vector<const Character *> menu;
+    menu.push_back(Translator::ASCENDING);
+    menu.push_back(Translator::DESCENDING);
+    menu.push_back(Translator::INSERTION);
+
+    createMenu(menu);
+    separator();
+
+    requestOption();
+    separator();
+
+    UInt sortOption = option - 1;
+
+    if (option < 1 || option > 3) {
+        exportAction();
+
+        return;
+    }
+
+    menu.clear();
     menu.push_back(Translator::EXPORT);
     menu.push_back(Translator::CANCEL);
     menu.push_back(Translator::EXIT);
@@ -696,14 +750,27 @@ void Application::exportAction() {
         file.open(filename, std::fstream::out);
 
         if (file.is_open()) {
+            ContactReference * references = CONTACTS_NULL;
+
+            if (sortOption != 2) {
+                references = new ContactReference[contactCount];
+                getSortedReferences(references, sortOption);
+            }
+
             for (UInt i = 0; i < contactCount; i++) {
-                file << contactList[i];
+                if (sortOption != 2)
+                    file << *references[i];
+                else
+                    file << contactList[i];
 
                 if (i != contactCount - 1)
                     file << std::endl << std::endl;
             }
 
             file.close();
+
+            if (sortOption != 2)
+                delete[] references;
 
             execute();
         }
@@ -735,8 +802,11 @@ void Application::preferencesAction() {
     requestOption();
     separator();
 
-    if (option < 1 || option > menu.size())
+    if (option < 1 || option > menu.size()) {
         preferencesAction();
+
+        return;
+    }
 
     preferences.language = (Translator::Language)(option - 1);
 
@@ -755,8 +825,11 @@ void Application::preferencesAction() {
     requestOption();
     separator();
 
-    if (option < 1 || option > menu.size())
+    if (option < 1 || option > menu.size()) {
         preferencesAction();
+
+        return;
+    }
 
     preferences.theme = (Theme)(option - 1);
 #endif

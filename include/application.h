@@ -61,6 +61,8 @@ public:
     UInt execute(const Character * = CONTACTS_NULL);
 
 private:
+    typedef Contact * ContactReference;
+
     UInt option;
 
     Translator translator;
@@ -81,7 +83,7 @@ private:
     void separator();
     void clear();
 
-    void sortContacts();
+    void getSortedReferences(ContactReference *, Bool);
 
     void addAction();
     void editAction();

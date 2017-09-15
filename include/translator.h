@@ -60,6 +60,7 @@ public:
     static Character * LIST_MESSAGE;
     static Character * SEARCH_MESSAGE;
     static Character * EXPORT_MESSAGE;
+    static Character * SORT_MESSAGE;
     static Character * LANGUAGE_MESSAGE;
     static Character * THEME_MESSAGE;
     static Character * ABOUT_MESSAGE;
@@ -75,6 +76,9 @@ public:
     static Character * CONTACTS;
     static Character * NAME;
     static Character * TELEPHONE_NUMBER;
+    static Character * ASCENDING;
+    static Character * DESCENDING;
+    static Character * INSERTION;
     static Character * ENGLISH;
     static Character * PORTUGUESE;
     static Character * LIGHT;
